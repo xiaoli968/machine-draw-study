@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机械三维建模学习工具</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei"}
+        body{background:#f4f7fa;padding:20px;max-width:1000px;margin:0 auto}
+        .title{text-align:center;font-size:26px;color:#225599;margin-bottom:20px}
+        .card{background:#fff;padding:22px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.06)}
+        h2{color:#225599;margin-bottom:12px;font-size:19px}
+        .tip-box{padding:16px;background:#eef6ff;border-radius:8px;margin-bottom:10px}
+        .tip-img{max-width:280px;margin:10px auto;border-radius:6px;display:block;border:1px solid #ddd}
+        .tip-text{font-size:16px;line-height:1.6}
+        button{padding:10px 18px;background:#257cdc;color:white;border:none;border-radius:8px;margin:6px;cursor:pointer}
+        .btn-warning{background:#e74c3c;}
+        .btn-stop{background:#999;}
+
+        .quiz-area{margin-top:10px; min-height: 530px;}
+        .quiz-progress{font-weight:bold;margin-bottom:10px}
+        .quiz-q{font-size:16px;margin-bottom:10px;line-height:1.5; min-height: 40px;}
+        
+        .quiz-img{
+            max-width:360px;
+            width:100%;
+            height:260px;
+            object-fit:contain;
+            object-position:center;
+            background:#f5f5f5;
+            display:block;
+            margin:8px auto;
+            border-radius:6px;
+            text-align:center;
+            line-height:260px;
+            font-size:14px;
+            color:#888;
+            border:1px solid #eee;
+            transition: all 0.2s ease;
+        }
+
+        .option{
+            padding:12px;
+            background:#f1f5fb;
+            border-radius:8px;
+            margin:6px 0;
+            cursor:pointer;
+            min-height:46px;
+            line-height:1.4;
+        }
+        .option:hover{background:#d7e7ff}
+        .result{margin-top:10px;font-weight:bold;font-size:15px;min-height:22px;}
+        .explain{
+            margin-top:8px;
+            font-size:14px;
+            color:#555;
+            line-height:1.5;
+            min-height:60px;
+        }
+        .hidden{display:none}
+        .score{font-size:22px;font-weight:bold;color:#257cdc;margin:20px 0}
+        .analysis{margin-top:10px;padding:12px;background:#f8f9fa;border-radius:8px;line-height:1.6}
+        .errListBox{margin-top:12px;padding:15px;background:#fef7f5;border-radius:8px;max-height:400px;overflow-y:auto;}
+        .errItem{padding:8px;border-bottom:1px solid #eee;margin-bottom:8px;}
+
+        .model-layout{
+            display:flex;
+            gap:20px;
+            margin-top:10px;
+            align-items:flex-start;
+        }
+        .model-image{
+            width:55%;
+            border-radius:8px;
+            overflow:hidden;
+            border:1px solid #ddd;
+            background:#f9f9f9;
+            min-height:360px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .model-image img{
+            width:100%;
+            height:auto;
+            object-fit:contain;
+        }
+        .model-text{
+            width:45%;
+            background:#f7f9fc;
+            padding:16px;
+            border-radius:8px;
+            font-size:15px;
+            line-height:1.7;
+            max-height:460px;
+            overflow-y:auto;
+        }
+        .model-text strong{color:#225599;}
+        .model-btn{
+            margin-top:10px;
+            display:flex;
+            gap:10px;
+        }
+        .model-btn button{
+            flex:1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="title">机械三维建模学习工具</div>
+
+<div class="card">
+    <h2>🔹 每日机械建模知识点</h2>
+    <div class="tip-box">
+        <img id="dailyImg" class="tip-img">
+        <div id="dailyTxt" class="tip-text">加载中...</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🔹 机械知识大乱斗 & 错题专项训练</h2>
+    <button onclick="startQuiz()">开始随机大乱斗(20题)</button>
+    <button onclick="showErrList()">查看全部错题本</button>
+    <button onclick="startErrQuiz()" class="btn-warning">错题专项刷题</button>
+    <button onclick="clearAllErr()" class="btn-warning">一键清空错题</button>
+    <button onclick="closeQuiz()" class="btn-stop">结束本次练习</button>
+
+    <div id="errListBox" class="hidden errListBox"></div>
+
+    <div id="quizArea" class="hidden quiz-area">
+        <div id="quizProgress" class="quiz-progress">进度：0/20</div>
+        <div id="quizQ" class="quiz-q"></div>
+        <img id="quizImg" class="quiz-img">
+        <div id="quizOpts"></div>
+        <div id="quizResult" class="result"></div>
+        <div id="quizExplain" class="explain"></div>
+        <button onclick="nextQ()">下一题</button>
+    </div>
+    <div id="finalScore" class="hidden score"></div>
+    <div id="analysis" class="hidden analysis"></div>
+</div>
+
+<div class="card">
+    <h2>🔹 建模实战练习（基于SolidWorks）</h2>
+    <div class="model-btn">
+        <button onclick="prevModel()">上一题</button>
+        <button onclick="nextModel()">下一题</button>
+    </div>
+    <div class="model-layout">
+        <div class="model-image">
+            <img id="modelImg" src="">
+        </div>
+        <div class="model-text" id="modelText"></div>
+    </div>
+</div>
+
+<script>
+const dailyList = [
+    {img:"1.png", txt:"全剖视图用于表达内部复杂结构，是三维出图最常用视图。"},
+    {img:"2.png", txt:"半剖视图一半外形、一半内部，适合对称零件。"},
+    {img:"3.png", txt:"局部剖视图只剖开局部结构，保留大部分外形。"},
+    {img:"4.png", txt:"粗实线表示可见轮廓，细虚线表示不可见轮廓。"},
+    {img:"5.png", txt:"细点画线用于轴线、中心线、对称线。"},
+    {img:"6.png", txt:"三视图：主视图、俯视图、左视图，长对正、高平齐、宽相等。"},
+    {img:"7.png", txt:"基孔制配合基准孔代号为 H，是工程图标注首选。"},
+    {img:"8.png", txt:"基轴制配合基准轴代号为 h，多用于轴类标准件。"},
+    {img:"9.png", txt:"间隙配合：轴比孔小，可相对滑动。"},
+    {img:"10.png", txt:"过盈配合：轴比孔大，装配后固定不松动。"},
+    {img:"11.png", txt:"过渡配合：可能间隙或过盈，定位精准常用。"},
+    {img:"12.png", txt:"圆度：控制截面圆形精度，属于形状公差。"},
+    {img:"13.png", txt:"同轴度：控制中心重合度，属于位置公差。"},
+    {img:"14.png", txt:"平行度：控制平面或轴线平行状态。"},
+    {img:"15.png", txt:"垂直度：控制两要素垂直关系。"},
+    {img:"16.png", txt:"平键连接用于传递扭矩，对中性好，拆装方便。"},
+    {img:"17.png", txt:"齿轮用于传递旋转运动与动力，模数是核心参数。"},
+    {img:"18.png", txt:"滚动轴承支撑轴并减少摩擦，属于标准件。"},
+    {img:"19.png", txt:"螺栓螺母是最常用可拆卸连接。"},
+    {img:"20.png", txt:"弹簧用于减震、夹紧、复位与储能。"},
+    {img:"21.png", txt:"蜗轮蜗杆可大减速比，具有自锁性。"},
+    {img:"22.png", txt:"联轴器用于连接两轴并传递扭矩。"},
+    {img:"23.png", txt:"零件图必须有：视图、尺寸、公差、技术要求、标题栏。"},
+    {img:"24.png", txt:"装配图表达零件之间装配关系与工作原理。"},
+    {img:"25.png", txt:"尺寸公差控制零件加工误差范围。"},
+    {img:"26.png", txt:"形位公差控制形状与位置精度。"},
+    {img:"27.png", txt:"表面粗糙度表示零件表面微观不平程度。"},
+    {img:"28.png", txt:"圆柱度控制圆柱面整体形状精度。"},
+    {img:"29.png", txt:"平面度控制平面平整程度。"},
+    {img:"30.png", txt:"对称度控制要素对称中心位置。"},
+    {img:"31.png", txt:"端面全跳动控制端面旋转精度。"},
+    {img:"32.png", txt:"径向全跳动控制圆柱面旋转精度。"},
+    {img:"33.png", txt:"V带传动依靠摩擦力传动，缓冲吸震。"},
+    {img:"34.png", txt:"链传动适用于远距离传动，精度一般。"},
+    {img:"35.png", txt:"齿轮传动精度高、效率高、结构紧凑。"},
+    {img:"36.png", txt:"凸轮机构将旋转运动转为直线往复运动。"},
+    {img:"37.png", txt:"销钉主要用于定位或轻载连接。"},
+    {img:"38.png", txt:"油封用于旋转轴的密封，防止漏油。"},
+    {img:"39.png", txt:"机械效率越高，能量损失越小。"},
+    {img:"40.png", txt:"标准件可直接选用，无需自行设计尺寸。"}
+];
+
+function showDaily(){
+    let item = dailyList[Math.floor(Math.random() * dailyList.length)];
+    document.getElementById("dailyImg").src = `img/daily/${item.img}`;
+    document.getElementById("dailyTxt").innerText = item.txt;
+}
+
+const modelExercises = [
+    {img:"1.png",title:"练习题1",cmd:"螺纹线、放样",tip:"1. 掌握螺旋线的绘制方法，注意圈数、螺距与锥角设置。<br>2. 扫描适用于起点与终点截面形状一致的场景；放样适用于起点与终点截面形状不同的场景。<br>3. 放样时起点与终点需分别绘制草图，遵循“内对内、外对外”原则，注意引导线与中心线的区别。"},
+    {img:"2.png",title:"练习题2",cmd:"拉伸、拉伸切除、筋",tip:"1. 绘制草图前先确定中心点位置，保证定位准确。<br>2. 可通过分步拉伸实现切除效果。<br>3. 使用筋命令报错时，注意调整生成方向。"},
+    {img:"3.png",title:"练习题3",cmd:"拉伸、圆角、抽壳",tip:"1. 识图要点：俯视图无前后斜面，说明仅左右倾斜，不可使用拔模。<br>2. 注意倒角的面选择。<br>3. 抽壳厚度需从图纸尺寸中准确识别。"},
+    {img:"4.png",title:"练习题4",cmd:"拉伸、筋、基准面",tip:"1. 多个草图拉伸时尽量保持方向一致。<br>2. 可先建立水平底座，再创建基准面绘制斜向结构，提高建模速度。"},
+    {img:"5.png",title:"练习题5",cmd:"拉伸、扫描切除",tip:"1. 扫描切除适合斜面切除场景。<br>2. 若使用拉伸切除，顶部斜面无法完整切除，需合理选择命令。"},
+    {img:"6.png",title:"练习题6",cmd:"旋转、拉伸切除",tip:"1. 可先用旋转做出主体形状，注意草图细节。<br>2. 主视图斜面可通过俯视图判断使用拉伸切除完成。<br>3. 注意拉伸切除的草图基准面选择。"},
+    {img:"7.png",title:"练习题7",cmd:"拉伸、镜像、拉伸切除、圆角",tip:"1. 注意拉伸顺序，避免孔特征被后续特征覆盖。<br>2. 特征树中的镜像命令可拖拽调整顺序，补充对称结构。"},
+    {img:"8.png",title:"练习题8",cmd:"旋转、倒角",tip:"1. 正确识别剖视图，虚线部分为实体。<br>2. 注意尺寸标注规范。<br>3. 倒角可在特征阶段统一完成。"},
+    {img:"9.png",title:"练习题9",cmd:"拉伸、拉伸切除",tip:"1. 草图不必一次性画出全部细节，可先绘制到关键轴线位置，后续再补充。<br>2. 按不同面分段处理更清晰。"},
+    {img:"10.png",title:"练习题10",cmd:"拉伸、基准面、拉伸切除",tip:"1. 掌握基准面的正确建立方法。<br>2. 本题不适合扫描切除。<br>3. 推荐思路：先做水平槽口，再绘制角度矩形。"},
+    {img:"11.png",title:"练习题11",cmd:"拉伸、基准面、拉伸切除、筋",tip:"1. 虚线代表内部结构，识图时必须考虑。<br>2. 建议分模块建模，完成一个区域再进行下一个。<br>3. 注意筋的基准面选取与临时轴调用。"},
+    {img:"12.png",title:"练习题12",cmd:"旋转、抽壳、基准面、圆周阵列",tip:"1. 厚度均匀的回转体可先旋转整体再抽壳。<br>2. 掌握垂直基准面的建立方法。<br>3. 注意圆周阵列的特征与边线选择。"},
+    {img:"13.png",title:"练习题13",cmd:"旋转、拉伸切除、圆周阵列",tip:"1. 可先绘制四分之一结构，镜像后旋转得到主体。<br>2. 侧面结构可用未完全定义矩形进行拉伸切除。<br>3. 最后用圆周阵列完成四个均布特征。"},
+    {img:"14.png",title:"练习题14",cmd:"3D草图、扫描",tip:"1. 零件不在同一平面时使用3D草图。<br>2. 绘制时注意面的垂直关系。<br>3. 检查点位移量，确保不在目标面上时为0。"},
+    {img:"15.png",title:"练习题15",cmd:"放样、拉伸切除、抽壳",tip:"1. 放样适合起点终点截面不同的特征，终点可为点。<br>2. 拉伸切除可按线段引导完成。<br>3. 注意抽壳厚度的识图。"},
+    {img:"16.png",title:"练习题16",cmd:"拉伸、拉伸切除、异型孔向导",tip:"1. 铣槽圆角可一体成型。<br>2. 沉头孔建议使用异型孔向导，规范且高效。"},
+    {img:"17.png",title:"练习题17",cmd:"拉伸、螺旋线、曲线阵列",tip:"1. 掌握螺旋线参数：参考圆、螺距、圈数、方向。<br>2. 学会使用曲线阵列，设置方向、实例数、间距与对齐方式。"},
+    {img:"18.png",title:"练习题18",cmd:"拉伸、拉伸切除",tip:"1. 底座可将右侧两处一起拉伸。<br>2. 左侧轴耳可先对称拉伸，再用拉伸切除开槽。"},
+    {img:"19.png",title:"练习题19",cmd:"拉伸、放样、拉伸切除",tip:"1. 放样拉伸比放样切除更稳定，能拉伸就不切除。<br>2. 拓展思路：尝试用拉伸切除替代部分放样步骤。"},
+    {img:"20.png",title:"练习题20",cmd:"拉伸、拉伸切除、异型孔向导、倒角",tip:"1. 合理选择草图基准面提高效率。<br>2. 螺纹孔用装饰螺纹线，成形到下一面。<br>3. 多个倒角注意面选择，可使用压缩与拖拽调整。<br>4. 学会用测量工具检查。"},
+    {img:"21.png",title:"练习题21",cmd:"旋转、拉伸、基准面",tip:"1. 旋转不必一次完成，可分段绘制。<br>2. 掌握基准面建立方法。<br>3. 注意圆弧连接的处理。"},
+    {img:"22.png",title:"练习题22",cmd:"钣金、拉伸切除、阵列",tip:"1. 钣金可配合褶边命令，符合实际生产且可展开。<br>2. 掌握线性阵列流程。"},
+    {img:"23.png",title:"练习题23",cmd:"拉伸、旋转切除",tip:"1. 同一直径标注代表同心结构。<br>2. 阵列可直接阵列切除特征。<br>3. 倒角可用三角切除方式。"},
+    {img:"24.png",title:"练习题24",cmd:"放样、拉伸、螺纹插入",tip:"1. 正确识图并计算锥度。<br>2. 掌握外螺纹插入方法（拉伸剪切螺纹线）。"},
+    {img:"25.png",title:"练习题25",cmd:"旋转、拉伸切除、螺旋线、倒角、孔",tip:"1. 草图基准点可放在复杂特征点上。<br>2. 旋转比拔模效率更高。<br>3. 螺旋线配合旋转切除；倒角在螺纹之前。"},
+    {img:"26.png",title:"练习题26",cmd:"旋转、拉伸切除、倒角、孔",tip:"1. 圆形结构不一定用拉伸，需综合判断视图。<br>2. 拉伸切除不必严格绘制完整形状。<br>3. 简单孔可直接用插入孔命令。"},
+    {img:"27.png",title:"练习题27",cmd:"拉伸、旋转切除、旋转、异型孔、倒角",tip:"1. 正五边形侧面应用旋转切除而非拉伸切除。<br>2. 球体可用圆弧薄壁生成。<br>3. 异型孔设置熟练运用；倒角有时更简单。"},
+    {img:"28.png",title:"练习题28",cmd:"拉伸、拉伸切除",tip:"1. 主特征拉伸可预留冗余空间便于后续切除。<br>2. 拔模角度注意全角与半角设置。<br>3. 隐藏线可切换视图模式查看。"},
+    {img:"29.png",title:"练习题29",cmd:"拉伸、旋转切除",tip:"1. 最优思路：先整体拉伸/旋转，再统一切除。<br>2. 双方向拉伸可调整绘图中心。<br>3. 练习旋转切除与薄壁切除。"},
+    {img:"30.png",title:"练习题30",cmd:"钣金、展开、拉伸切除、折叠",tip:"1. 折叠件优先使用钣金，可先展开再绘制。<br>2. 折叠角度用命令设置，不必在草图绘制。<br>3. 展开后绘制草图，切除多余部分，最后折叠。"}
+];
+
+let modelIndex = 0;
+function showModel(){
+    let m = modelExercises[modelIndex];
+    document.getElementById("modelImg").src = `img/draw/${m.img}`;
+    document.getElementById("modelText").innerHTML = `
+        <strong>${m.title}</strong><br>
+        <strong>核心命令：</strong>${m.cmd}<br><br>
+        <strong>建模思路与注意点：</strong><br>${m.tip}
+    `;
+}
+function prevModel(){
+    if(modelIndex > 0){
+        modelIndex--;
+        showModel();
+    }
+}
+function nextModel(){
+    if(modelIndex < modelExercises.length-1){
+        modelIndex++;
+        showModel();
+    }
+}
+
+const qBank = [
+    {type:"draw",img:1,q:"三视图遵循的投影规律是？",a:"A",o:["长对正、高平齐、宽相等","长相等、高平齐、宽对正","长对正、高相等、宽平齐"],exp:"三视图核心：长对正、高平齐、宽相等"},
+    {type:"draw",img:2,q:"全剖视图主要用于表达机件的什么结构？",a:"B",o:["外形复杂","内部复杂","局部细小"],exp:"全剖视图用于表达内部复杂结构"},
+    {type:"draw",img:3,q:"半剖视图最适合哪种零件？",a:"C",o:["不对称零件","外形简单","对称零件"],exp:"半剖视图适用于内外结构都需要表达的对称零件"},
+    {type:"draw",img:4,q:"局部剖视图的断裂边界使用什么线？",a:"A",o:["波浪线","虚线","粗实线"],exp:"局部剖视图断裂边界用波浪线"},
+    {type:"draw",img:5,q:"可见轮廓线应使用哪种线型？",a:"A",o:["粗实线","细虚线","细点画线"],exp:"粗实线表示可见轮廓线"},
+    {type:"draw",img:6,q:"轴线和中心线应使用哪种线型？",a:"C",o:["粗实线","细虚线","细点画线"],exp:"轴线、中心线必须使用细点画线"},
+    {type:"draw",img:7,q:"倾斜表面的真实形状应采用哪种视图？",a:"B",o:["局部视图","斜视图","剖视图"],exp:"斜视图用于表达倾斜表面真实形状"},
+    {type:"draw",img:8,q:"仅表达机件断面形状的视图是？",a:"A",o:["断面图","剖视图","向视图"],exp:"断面图只表达断面形状"},
+    {type:"tol",img:9,q:"基孔制的基准孔代号是？",a:"A",o:["H","h","JS"],exp:"基孔制基准孔代号为大写H"},
+    {type:"tol",img:10,q:"基轴制的基准轴代号是？",a:"B",o:["H","h","JS"],exp:"基轴制基准轴代号为小写h"},
+    {type:"tol",img:11,q:"介于间隙与过盈之间的配合称为？",a:"C",o:["间隙配合","过盈配合","过渡配合"],exp:"过渡配合可能间隙也可能过盈"},
+    {type:"tol",img:12,q:"零件尺寸允许的变动量称为？",a:"B",o:["形位公差","尺寸公差","表面粗糙度"],exp:"尺寸公差是尺寸允许的变动范围"},
+    {type:"tol",img:13,q:"表面粗糙度的评定参数符号是？",a:"A",o:["Ra","H","h"],exp:"表面粗糙度核心符号为Ra"},
+    {type:"tol",img:14,q:"圆度和圆柱度属于哪类公差？",a:"A",o:["形状公差","位置公差","尺寸公差"],exp:"圆度、圆柱度都属于形状公差"},
+    {type:"tol",img:15,q:"平行度和垂直度属于哪类公差？",a:"B",o:["形状公差","位置公差","尺寸公差"],exp:"平行度、垂直度属于位置公差"},
+    {type:"tol",img:16,q:"同轴度、对称度、跳动主要控制什么精度？",a:"B",o:["形状","位置","尺寸"],exp:"同轴度、对称度、跳动都属于位置公差"},
+    {type:"design",img:17,q:"螺栓连接属于哪种连接方式？",a:"A",o:["可拆卸连接","不可拆卸连接","焊接"],exp:"螺栓连接是最常用可拆卸连接"},
+    {type:"design",img:18,q:"螺钉连接主要用于什么场合？",a:"B",o:["受力大的地方","受力小、不经常拆卸","高速旋转"],exp:"螺钉连接多用于受力小、不常拆卸场合"},
+    {type:"design",img:19,q:"双头螺柱常用于哪种安装场景？",a:"A",o:["被连接件太厚、无法通孔","薄壁零件","塑料件"],exp:"双头螺柱用于一端无法开通孔的厚件"},
+    {type:"design",img:20,q:"平键连接的主要作用是？",a:"A",o:["传递扭矩","支撑轴","密封"],exp:"平键用于轴与轮毂之间传递扭矩"},
+    {type:"design",img:21,q:"圆柱销的主要作用是？",a:"B",o:["传递动力","定位","紧固"],exp:"销主要用于定位或轻载连接"},
+    {type:"design",img:22,q:"滚动轴承的主要功能是？",a:"B",o:["传递动力","支撑轴、减少摩擦","密封"],exp:"轴承用于支撑旋转轴、降低摩擦"},
+    {type:"design",img:23,q:"弹簧不能实现的功能是？",a:"B",o:["减震、夹紧","切削","复位、储能"],exp:"弹簧用于减震、夹紧、复位，不能切削"},
+    {type:"design",img:24,q:"齿轮传动的核心参数是？",a:"C",o:["齿数","齿宽","模数"],exp:"模数是齿轮设计的核心参数"},
+    {type:"design",img:25,q:"蜗轮蜗杆传动的特点是？",a:"C",o:["高速传动","可反转","大减速比、自锁"],exp:"蜗轮蜗杆减速比大、具有自锁性"},
+    {type:"design",img:26,q:"V带传动依靠什么传递动力？",a:"A",o:["摩擦力","啮合","链条"],exp:"V带传动依靠摩擦力传动"},
+    {type:"design",img:27,q:"适用于远距离、恶劣环境的传动是？",a:"B",o:["齿轮传动","链传动","带传动"],exp:"链传动适合远距离、恶劣环境"},
+    {type:"design",img:28,q:"凸轮机构可以把旋转运动变成？",a:"B",o:["连续旋转","直线往复","减速运动"],exp:"凸轮将旋转运动转为直线往复运动"},
+    {type:"design",img:29,q:"联轴器的主要作用是？",a:"B",o:["支撑轴","连接两轴、传递扭矩","密封"],exp:"联轴器用于连接两轴并传递扭矩"},
+    {type:"design",img:30,q:"骨架油封的作用是？",a:"C",o:["支撑","传动","密封防漏"],exp:"油封用于旋转轴密封，防止润滑油泄漏"},
+    {type:"design",img:31,q:"用于相交轴之间传动的齿轮是？",a:"C",o:["直齿轮","斜齿轮","锥齿轮"],exp:"锥齿轮用于相交轴传动"},
+    {type:"draw",img:32,q:"下列哪项不属于零件图五要素？",a:"B",o:["标题栏","明细栏","尺寸标注"],exp:"零件图不含明细栏，明细栏是装配图内容"},
+    {type:"draw",img:33,q:"盘盖类零件的主视图通常采用？",a:"A",o:["剖视图","外形视图","斜视图"],exp:"盘盖类零件常采用剖视图表达内部结构"},
+    {type:"draw",img:34,q:"装配图中用于区分零件的是？",a:"A",o:["零件编号","尺寸","标题栏"],exp:"装配图用零件编号和明细栏说明零件"},
+    {type:"draw",img:35,q:"一张综合图纸同时包含公差、连接、结构，属于？",a:"C",o:["零件图","草图","装配图/综合识图"],exp:"多零件、多结构属于综合识图/装配图"},
+    {type:"draw",q:"机械制图中角度标注数字应？",a:"A",o:["水平书写","垂直书写","随角度旋转"],exp:"角度数字一律水平书写"},
+    {type:"tol",q:"H7/g6属于哪种配合？",a:"A",o:["间隙配合","过盈配合","过渡配合"],exp:"H7/g6是典型间隙配合"},
+    {type:"tol",q:"H7/p6属于哪种配合？",a:"B",o:["间隙","过盈","过渡"],exp:"H7/p6属于过盈配合"},
+    {type:"tol",q:"H7/k6属于哪种配合？",a:"C",o:["间隙","过盈","过渡"],exp:"H7/k6是典型过渡配合"},
+    {type:"tol",q:"公差等级数字越小表示？",a:"A",o:["精度越高","精度越低","尺寸越小"],exp:"公差等级数字越小，精度越高"},
+    {type:"design",q:"齿轮传动的优点是？",a:"C",o:["距离远","缓冲大","精度高、效率高"],exp:"齿轮传动精度高、效率高"},
+    {type:"design",q:"不属于密封件的是？",a:"C",o:["油封","毡圈","键"],exp:"键是传动件，不是密封件"},
+    {type:"draw",q:"不可见轮廓线应使用？",a:"B",o:["粗实线","细虚线","点画线"],exp:"不可见轮廓用细虚线"},
+    {type:"draw",q:"尺寸线应使用哪种线型？",a:"C",o:["粗实线","细虚线","细实线"],exp:"尺寸线必须用细实线"},
+    {type:"draw",q:"绘制圆或回转体应先画？",a:"C",o:["轮廓","尺寸","中心线"],exp:"先画中心线，再画轮廓"}
+];
+
+function getErrData(){
+    let str = localStorage.getItem("machineErrList");
+    return str ? JSON.parse(str) : [];
+}
+function saveErrData(list){
+    localStorage.setItem("machineErrList",JSON.stringify(list));
+}
+function addErrQuestion(que){
+    let arr = getErrData();
+    let has = arr.some(item=>item.q === que.q);
+    if(!has){
+        arr.push(que);
+        saveErrData(arr);
+    }
+}
+function closeQuiz(){
+    document.getElementById("quizArea").classList.add("hidden");
+    document.getElementById("finalScore").classList.add("hidden");
+    document.getElementById("analysis").classList.add("hidden");
+    qList = [];
+}
+function clearAllErr(){
+    if(confirm("确定清空全部错题记录？删除后无法恢复")){
+        localStorage.removeItem("machineErrList");
+        alert("已清空错题本");
+        document.getElementById("errListBox").classList.add("hidden");
+        document.getElementById("errListBox").innerHTML = "";
+        closeQuiz();
+    }
+}
+function showErrList(){
+    let list = getErrData();
+    let box = document.getElementById("errListBox");
+    box.classList.remove("hidden");
+    if(list.length===0){
+        box.innerHTML = "<p>错题本暂无错题，快去答题积累错题吧！</p>";
+        return;
+    }
+    let html = `<p>当前总计错题：${list.length}道</p>`;
+    list.forEach((item,idx)=>{
+        let imghtml = item.img ? `<br><img style="max-width:220px;max-height:150px;" src="img/quiz/${item.img}.png">` : "";
+        html += `
+        <div class="errItem">
+            <p>${idx+1}.${item.q}</p>
+            ${imghtml}
+            <p>正确答案：${item.a}｜解析：${item.exp}</p>
+        </div>`;
+    })
+    box.innerHTML = html;
+}
+
+let qList = [], idx=0, scr=0;
+let err = {draw:0,tol:0,design:0};
+let hasAnswered = false;
+let isErrMode = false;
+
+function startQuiz(){
+    closeQuiz();
+    isErrMode = false;
+    qList = [...qBank].sort(()=>Math.random()-0.5).slice(0,20);
+    initQuizBase();
+}
+function startErrQuiz(){
+    closeQuiz();
+    isErrMode = true;
+    let errArr = getErrData();
+    if(errArr.length === 0){
+        alert("错题本为空，无法开始专项练习！");
+        return;
+    }
+    qList = [...errArr].sort(()=>Math.random()-0.5);
+    initQuizBase();
+}
+function initQuizBase(){
+    idx=0; scr=0;
+    err.draw=0; err.tol=0; err.design=0;
+    document.getElementById("quizArea").classList.remove("hidden");
+    document.getElementById("finalScore").classList.add("hidden");
+    document.getElementById("analysis").classList.add("hidden");
+    document.getElementById("errListBox").classList.add("hidden");
+    showQ();
+}
+
+function showQ(){
+    let q = qList[idx];
+    hasAnswered = false;
+    document.getElementById("quizProgress").innerText = isErrMode ? `错题练习：${idx+1}/${qList.length}` : `进度：${idx+1}/20`;
+    document.getElementById("quizQ").innerText = q.q;
+    let img = document.getElementById("quizImg");
+
+    if(q.img){
+        img.classList.remove("hidden");
+        img.src = `img/quiz/${q.img}.png`;
+        img.style.height = "260px";
+        img.style.lineHeight = "260px";
+        img.innerText = "";
+    }else{
+        img.classList.add("hidden");
+        img.src = "";
+        img.innerText = "";
+    }
+
+    let opts = document.getElementById("quizOpts");
+    opts.innerHTML = "";
+    ["A","B","C"].forEach((c,i)=>{
+        let d = document.createElement("div");
+        d.className = "option";
+        d.innerText = c + "：" + q.o[i];
+        d.onclick = ()=>chk(c,q);
+        opts.appendChild(d);
+    });
+    document.getElementById("quizResult").innerText = "";
+    document.getElementById("quizExplain").innerText = "";
+}
+
+function chk(sel,q){
+    if(hasAnswered) return;
+    hasAnswered = true;
+    let res = document.getElementById("quizResult");
+    let exp = document.getElementById("quizExplain");
+    document.querySelectorAll(".option").forEach(o=>o.style.pointerEvents="none");
+    if(sel===q.a){
+        res.innerText = "✅ 正确";
+        res.className = "result correct";
+        scr++;
+    }else{
+        res.innerText = "❌ 错误，正确："+q.a;
+        res.className = "result wrong";
+        err[q.type]++;
+        addErrQuestion(q);
+    }
+    exp.innerText = "解析："+q.exp;
+}
+
+function nextQ(){
+    let q = qList[idx];
+    if(!hasAnswered){
+        hasAnswered = true;
+        err[q.type]++;
+        addErrQuestion(q);
+        document.getElementById("quizResult").innerText = "❌ 未作答，判定错误";
+        document.getElementById("quizResult").className = "result wrong";
+        document.getElementById("quizExplain").innerText = "解析："+q.exp;
+        document.querySelectorAll(".option").forEach(o=>o.style.pointerEvents="none");
+    }
+    idx++;
+    if(idx < qList.length){
+        setTimeout(()=>showQ(),600);
+    }else{
+        finish();
+    }
+}
+
+function finish(){
+    document.getElementById("quizArea").classList.add("hidden");
+    document.getElementById("finalScore").classList.remove("hidden");
+    let allNum = qList.length;
+    document.getElementById("finalScore").innerText = `最终得分：${scr}/${allNum}`;
+    let a = document.getElementById("analysis");
+    a.classList.remove("hidden");
+    let txt = "";
+    if(err.draw+err.tol+err.design===0) txt += "✅ 本次练习全部答对！";
+    else{
+        txt += "📊 本次错题分类统计：\n";
+        if(err.draw>0) txt += `• 机械制图 错题：${err.draw} 道\n`;
+        if(err.tol>0) txt += `• 公差与配合 错题：${err.tol} 道\n`;
+        if(err.design>0) txt += `• 机械设计 错题：${err.design} 道\n`;
+        txt += "错题已自动存入错题本，可使用【错题专项刷题】反复练习薄弱点！";
+    }
+    a.innerText = txt;
+}
+
+showDaily();
+showModel();
+</script>
+</body>
+</html>
